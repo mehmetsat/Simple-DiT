@@ -1,20 +1,23 @@
+from collections import deque
 from dataclasses import dataclass
-from einops import rearrange
+from einops import rearrange, repeat
 from torch import Tensor
+from torch.nn import RMSNorm
+from torch.nn.modules.normalization import RMSNorm
+from torch.optim.lr_scheduler import LinearLR
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from typing import Dict, Optional, Literal, Union, Any
+import math
+import os
 import torch
 import torch.nn as nn
-from torch.nn import RMSNorm
+import torch.nn.functional as F
+import torchvision
+from accelerate import Accelerator
+from syntht2i import ShapeDataset
 
 # Original code: https://github.com/feizc/DiT-MoE/blob/main/models.py
-
-
-
-
-from collections import deque
-from typing import Dict, Optional, Literal
-import torch
-import torch.nn as nn
-
 
 def gradfilter_ma(
     m: nn.Module,
@@ -62,10 +65,7 @@ def gradfilter_ema(
     return grads
 
 
-from dataclasses import dataclass
-import torch
-import torch.nn as nn
-from transformer.dit import DoubleStreamBlock, DiTBlock, Modulation
+
 
 @dataclass
 class TokenMixerParameters:
@@ -166,12 +166,7 @@ class TokenMixer(nn.Module):
 
 
 
-import torch
-from einops import rearrange, repeat
-from torch import Tensor
-import torch
-import os
-from typing import Optional, Union, Dict, Any
+
 
 def attention(q: Tensor, k: Tensor, v: Tensor, pe: Tensor, dropout: float = 0.0) -> Tensor:
     if pe is not None:
@@ -209,10 +204,7 @@ def apply_rope(xq: Tensor, xk: Tensor, freqs_cis: Tensor) -> tuple[Tensor, Tenso
     xk_out = freqs_cis[..., 0] * xk_[..., 0] + freqs_cis[..., 1] * xk_[..., 1]
     return xq_out.reshape(*xq.shape).type_as(xq), xk_out.reshape(*xk.shape).type_as(xk)
 
-from typing import Optional
-import torch
-import torch.nn as nn
-import math
+
 
 
 
@@ -362,12 +354,7 @@ class EmbedND(nn.Module):
 
         return emb.unsqueeze(1)
 
-from dataclasses import dataclass
-from einops import rearrange
-from torch import Tensor
-import torch
-import torch.nn as nn
-from torch.nn import RMSNorm
+
 
 class QKNorm(torch.nn.Module):
     def __init__(self, dim: int):
@@ -683,9 +670,7 @@ class SingleStreamBlock(nn.Module):
         output = linear2(torch.cat((attn, self.mlp_act(mlp_out)), 2))
         return x + mod1.gate * output
 
-import torch
-from torch import nn
-from dataclasses import dataclass
+
 
 @dataclass
 class BackboneParams:
@@ -845,11 +830,7 @@ class TransformerBackbone(nn.Module):
 
         return img
 
-import math
-import torch.nn as nn
-from torch.nn.modules.normalization import RMSNorm
-import torch
-from dataclasses import dataclass
+
 
 @dataclass
 class ReiMeiParameters:
@@ -1137,8 +1118,7 @@ class ReiMei(nn.Module):
 
         return (z / 2.0) + 0.5 
 
-import torch
-import torch.nn.functional as F
+
 
 def unpatchify(x, patch_size, height, width):
     """
@@ -1191,15 +1171,7 @@ def random_cfg_mask(bs, x):
 
     return tensor
 
-import torch
-from accelerate import Accelerator
-from tqdm import tqdm
-import torchvision
-import os
-from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import LinearLR
-from grokfast import gradfilter_ema
-from syntht2i import ShapeDataset
+
 
 TRAIN_STEPS = 100000
 LR = 0.0001
